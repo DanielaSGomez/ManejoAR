@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Velocidades - Examen de Manejo</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --border:#2a2f3a;
+    --text:#eef0f3; --muted:#9aa3b2; --accent:#3ea6ff; --good:#37c977; --bad:#ff5d5d;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+  .wrap{max-width:820px;margin:0 auto;}
+  h1{font-size:22px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px;}
+  .tabs{display:flex;gap:8px;margin-bottom:18px;}
+  .tab{flex:1;padding:10px;text-align:center;border-radius:10px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:14px;color:var(--muted);}
+  .tab.active{background:var(--accent);color:#04121f;font-weight:600;border-color:var(--accent);}
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:22px 0 8px;}
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px;}
+  th,td{padding:9px 10px;text-align:left;font-size:13.5px;border-bottom:1px solid var(--border);}
+  th{background:var(--card2);color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;}
+  tr:last-child td{border-bottom:none;}
+  .max{color:var(--bad);font-weight:700;}
+  .min{color:var(--good);font-weight:700;}
+  .note{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted);margin-top:10px;}
+  #quizPane{display:none;}
+  .qcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+  .qtext{font-size:17px;margin-bottom:18px;line-height:1.4;}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .opt{padding:12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);cursor:pointer;font-size:15px;transition:.15s;}
+  .opt:hover{border-color:var(--accent);}
+  .opt.correct{background:rgba(55,201,119,.18);border-color:var(--good);color:var(--good);}
+  .opt.wrong{background:rgba(255,93,93,.18);border-color:var(--bad);color:var(--bad);}
+  .opt.disabled{pointer-events:none;}
+  .score{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:14px;color:var(--muted);}
+  .score b{color:var(--text);}
+  .nextBtn{margin-top:16px;background:var(--accent);color:#04121f;border:none;padding:11px 18px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;display:none;}
+  .streak{color:var(--accent);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚗 Velocidades máximas y mínimas</h1>
+  <div class="sub">Según tabla del apunte de estudio (Zona urbana / rural / autopistas)</div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabTable">📋 Tabla</div>
+    <div class="tab" id="tabQuiz">🎯 Quiz</div>
+  </div>
+
+  <div id="tablePane">
+    <div class="section-title">Zona urbana</div>
+    <table>
+      <tr><th>Lugar</th><th>Vehículo</th><th>Máxima</th><th>Mínima</th></tr>
+      <tr><td>Calles</td><td>Todos</td><td class="max">40 km/h</td><td class="min">20 km/h</td></tr>
+      <tr><td>Avenidas</td><td>Todos</td><td class="max">60 km/h</td><td class="min">30 km/h</td></tr>
+      <tr><td>Vías semaforizadas</td><td>Todos</td><td class="max">Coordinación semafórica</td><td class="min">Mitad del máximo</td></tr>
+      <tr><td>Intersecciones</td><td>Todos</td><td class="max">30 km/h</td><td class="min">15 km/h</td></tr>
+      <tr><td>Rutas en zona urbana</td><td>Todos</td><td class="max">60 km/h</td><td class="min">30 km/h</td></tr>
+    </table>
+
+    <div class="section-title">Zona rural</div>
+    <table>
+      <tr><th>Lugar</th><th>Vehículo</th><th>Máxima</th><th>Mínima</th></tr>
+      <tr><td>Ruta</td><td>Motos y autos</td><td class="max">110 km/h</td><td class="min">40 km/h</td></tr>
+      <tr><td>Ruta</td><td>Camionetas, micros, buses y casas autopropulsadas</td><td class="max">90 km/h</td><td class="min">40 km/h*</td></tr>
+      <tr><td>Ruta</td><td>Camiones y autos con casa rodante</td><td class="max">80 km/h</td><td class="min">40 km/h*</td></tr>
+      <tr><td>Semiautopistas</td><td>Motos y autos</td><td class="max">120 km/h</td><td class="min">40 km/h*</td></tr>
+      <tr><td>Semiautopistas</td><td>Camionetas</td><td class="max">110 km/h</td><td class="min">40 km/h*</td></tr>
+      <tr><td>Semiautopistas</td><td>Micros, buses y casas autopropulsadas</td><td class="max">90 km/h</td><td class="min">40 km/h*</td></tr>
+    </table>
+    <div class="note">*Salvo maquinaria especial.</div>
+
+    <div class="section-title">Urbana y rural — Autopistas</div>
+    <table>
+      <tr><th>Lugar</th><th>Vehículo</th><th>Máxima</th><th>Mínima</th></tr>
+      <tr><td>Autopistas</td><td>Motos y autos</td><td class="max">130 km/h</td><td class="min">65 km/h</td></tr>
+      <tr><td>Autopistas</td><td>Ómnibus y casas autopropulsadas</td><td class="max">100 km/h</td><td class="min">65 km/h</td></tr>
+      <tr><td>Autopistas</td><td>Camionetas</td><td class="max">110 km/h</td><td class="min">65 km/h</td></tr>
+      <tr><td>Autopistas</td><td>Camiones y autos con casa rodante</td><td class="max">80 km/h</td><td class="min">65 km/h</td></tr>
+      <tr><td>Paso a nivel sin barrera</td><td>Todos</td><td class="max">20 km/h</td><td class="min">20 km/h</td></tr>
+    </table>
+  </div>
+
+  <div id="quizPane">
+    <div class="score">
+      <div>Pregunta <b id="qNum">1</b>/<span id="qTotal">10</span></div>
+      <div>Aciertos: <b id="qScore">0</b> · Racha: <span class="streak" id="qStreak">0</span></div>
+    </div>
+    <div class="qcard">
+      <div class="qtext" id="qText">Cargando...</div>
+      <div class="opts" id="qOpts"></div>
+      <button class="nextBtn" id="nextBtn">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {q:"¿Cuál es la velocidad máxima en una calle (zona urbana)?", a:"40 km/h", opts:["30 km/h","40 km/h","50 km/h","60 km/h"]},
+  {q:"¿Cuál es la velocidad mínima en una calle?", a:"20 km/h", opts:["10 km/h","15 km/h","20 km/h","30 km/h"]},
+  {q:"¿Cuál es la velocidad máxima en una avenida?", a:"60 km/h", opts:["40 km/h","50 km/h","60 km/h","70 km/h"]},
+  {q:"¿Cuál es la velocidad mínima en una avenida?", a:"30 km/h", opts:["20 km/h","30 km/h","40 km/h","15 km/h"]},
+  {q:"En una vía semaforizada, ¿cómo se determina la velocidad máxima?", a:"Por la coordinación semafórica", opts:["Por la coordinación semafórica","Siempre 60 km/h","Siempre 40 km/h","No tiene límite"]},
+  {q:"En una vía semaforizada, ¿cuál es la velocidad mínima?", a:"Mitad del máximo", opts:["20 km/h","30 km/h","Mitad del máximo","No hay mínima"]},
+  {q:"¿Cuál es la velocidad máxima en una intersección?", a:"30 km/h", opts:["15 km/h","20 km/h","30 km/h","40 km/h"]},
+  {q:"¿Cuál es la velocidad mínima en una intersección?", a:"15 km/h", opts:["10 km/h","15 km/h","20 km/h","30 km/h"]},
+  {q:"En una ruta que atraviesa zona urbana, ¿cuál es la velocidad máxima?", a:"60 km/h", opts:["40 km/h","50 km/h","60 km/h","80 km/h"]},
+  {q:"En una ruta que atraviesa zona urbana, ¿cuál es la velocidad mínima?", a:"30 km/h", opts:["20 km/h","30 km/h","40 km/h","15 km/h"]},
+  {q:"En ruta (zona rural), para motos y autos, ¿cuál es la máxima?", a:"110 km/h", opts:["90 km/h","100 km/h","110 km/h","120 km/h"]},
+  {q:"En ruta (zona rural), para motos y autos, ¿cuál es la mínima?", a:"40 km/h", opts:["20 km/h","30 km/h","40 km/h","50 km/h"]},
+  {q:"En ruta (zona rural), para camionetas, micros, buses y casas autopropulsadas, ¿cuál es la máxima?", a:"90 km/h", opts:["80 km/h","90 km/h","100 km/h","110 km/h"]},
+  {q:"En ruta (zona rural), para camiones y autos con casa rodante, ¿cuál es la máxima?", a:"80 km/h", opts:["70 km/h","80 km/h","90 km/h","100 km/h"]},
+  {q:"En semiautopista, para motos y autos, ¿cuál es la máxima?", a:"120 km/h", opts:["110 km/h","120 km/h","130 km/h","100 km/h"]},
+  {q:"En semiautopista, para camionetas, ¿cuál es la máxima?", a:"110 km/h", opts:["90 km/h","100 km/h","110 km/h","120 km/h"]},
+  {q:"En semiautopista, para micros, buses y casas autopropulsadas, ¿cuál es la máxima?", a:"90 km/h", opts:["80 km/h","90 km/h","100 km/h","110 km/h"]},
+  {q:"En autopista, para motos y autos, ¿cuál es la máxima?", a:"130 km/h", opts:["110 km/h","120 km/h","130 km/h","140 km/h"]},
+  {q:"En autopista, para ómnibus y casas autopropulsadas, ¿cuál es la máxima?", a:"100 km/h", opts:["80 km/h","90 km/h","100 km/h","110 km/h"]},
+  {q:"En autopista, para camionetas, ¿cuál es la máxima?", a:"110 km/h", opts:["90 km/h","100 km/h","110 km/h","130 km/h"]},
+  {q:"En autopista, para camiones y autos con casa rodante, ¿cuál es la máxima?", a:"80 km/h", opts:["70 km/h","80 km/h","90 km/h","100 km/h"]},
+  {q:"¿Cuál es la velocidad mínima en autopista (regla general)?", a:"65 km/h", opts:["40 km/h","50 km/h","65 km/h","80 km/h"]},
+  {q:"¿Cuál es la velocidad, máxima y mínima, en un paso a nivel sin barrera?", a:"20 km/h", opts:["10 km/h","20 km/h","30 km/h","40 km/h"]},
+];
+
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+
+let order = [], idx = 0, score = 0, streak = 0, answered = false;
+
+const tabTable = document.getElementById('tabTable');
+const tabQuiz = document.getElementById('tabQuiz');
+const tablePane = document.getElementById('tablePane');
+const quizPane = document.getElementById('quizPane');
+const qText = document.getElementById('qText');
+const qOpts = document.getElementById('qOpts');
+const qNum = document.getElementById('qNum');
+const qTotal = document.getElementById('qTotal');
+const qScore = document.getElementById('qScore');
+const qStreak = document.getElementById('qStreak');
+const nextBtn = document.getElementById('nextBtn');
+
+qTotal.textContent = questions.length;
+
+tabTable.onclick = () => {
+  tabTable.classList.add('active'); tabQuiz.classList.remove('active');
+  tablePane.style.display = 'block'; quizPane.style.display = 'none';
+};
+tabQuiz.onclick = () => {
+  tabQuiz.classList.add('active'); tabTable.classList.remove('active');
+  tablePane.style.display = 'none'; quizPane.style.display = 'block';
+  if(order.length === 0) startQuiz();
+};
+
+function startQuiz(){
+  order = shuffle([...Array(questions.length).keys()]);
+  idx = 0; score = 0; streak = 0;
+  qScore.textContent = 0; qStreak.textContent = 0;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  nextBtn.style.display = 'none';
+  const item = questions[order[idx]];
+  qNum.textContent = idx + 1;
+  qText.textContent = item.q;
+  qOpts.innerHTML = '';
+  const opts = shuffle(item.opts);
+  opts.forEach(opt => {
+    const div = document.createElement('div');
+    div.className = 'opt';
+    div.textContent = opt;
+    div.onclick = () => selectAnswer(div, opt, item.a);
+    qOpts.appendChild(div);
+  });
+}
+
+function selectAnswer(el, chosen, correct){
+  if(answered) return;
+  answered = true;
+  document.querySelectorAll('.opt').forEach(o => o.classList.add('disabled'));
+  if(chosen === correct){
+    el.classList.add('correct');
+    score++; streak++;
+  } else {
+    el.classList.add('wrong');
+    streak = 0;
+    document.querySelectorAll('.opt').forEach(o => { if(o.textContent === correct) o.classList.add('correct'); });
+  }
+  qScore.textContent = score;
+  qStreak.textContent = streak;
+  nextBtn.style.display = 'inline-block';
+}
+
+nextBtn.onclick = () => {
+  idx++;
+  if(idx >= order.length){
+    qText.textContent = `¡Terminaste! Resultado: ${score}/${questions.length}`;
+    qOpts.innerHTML = '';
+    nextBtn.textContent = 'Volver a empezar';
+    nextBtn.onclick = startQuiz;
+  } else {
+    renderQuestion();
+  }
+};
+</script>
+</body>
+</html>

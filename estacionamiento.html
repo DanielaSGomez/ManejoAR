@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador de Estacionamiento</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --border:#2a2f3a;
+    --text:#eef0f3; --muted:#9aa3b2; --accent:#3ea6ff; --good:#37c977; --bad:#ff5d5d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:16px;}
+  .wrap{max-width:740px;margin:0 auto;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  .modes{display:flex;gap:8px;margin-bottom:12px;}
+  .mode{flex:1;padding:9px;text-align:center;border-radius:10px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--muted);}
+  .mode.active{background:var(--accent);color:#04121f;font-weight:700;border-color:var(--accent);}
+  #canvasWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);}
+  canvas{display:block;width:100%;height:auto;background:#3a3f47;}
+  #status{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    background:rgba(15,17,21,.85);border:1px solid var(--border);border-radius:10px;
+    padding:6px 14px;font-size:13px;font-weight:600;color:var(--text);display:none;}
+  #status.show{display:block;}
+  #status.good{color:var(--good);border-color:var(--good);}
+  #status.bad{color:var(--bad);border-color:var(--bad);}
+  .controls{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px;flex-wrap:wrap;}
+  .pad{display:grid;grid-template-columns:52px 52px 52px;grid-template-rows:52px 52px;gap:6px;}
+  .pad button{border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:20px;cursor:pointer;user-select:none;}
+  .pad button:active{background:var(--accent);color:#04121f;}
+  #btnUp{grid-column:2;grid-row:1;}
+  #btnLeft{grid-column:1;grid-row:2;}
+  #btnDown{grid-column:2;grid-row:2;}
+  #btnRight{grid-column:3;grid-row:2;}
+  .side{display:flex;flex-direction:column;gap:8px;}
+  .resetBtn{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:14px;cursor:pointer;font-weight:600;}
+  .resetBtn:hover{border-color:var(--accent);}
+  .hint{color:var(--muted);font-size:12px;max-width:220px;}
+  .kbd{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🅿️ Simulador de estacionamiento</h1>
+  <div class="sub">Estacioná sin chocar y quedando dentro de las líneas.</div>
+
+  <div class="modes">
+    <div class="mode active" id="modeParallel">↔️ Paralelo</div>
+    <div class="mode" id="modePerp">⬆️ En 90°</div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="c" width="700" height="420"></canvas>
+    <div id="status"></div>
+  </div>
+
+  <div class="controls">
+    <div class="pad">
+      <button id="btnUp">▲</button>
+      <button id="btnLeft">◀</button>
+      <button id="btnDown">▼</button>
+      <button id="btnRight">▶</button>
+    </div>
+    <div class="side">
+      <button class="resetBtn" id="btnReset">🔄 Reiniciar</button>
+      <div class="hint">▲ Adelante · ▼ Marcha atrás · ◀▶ Girar el volante. También podés usar las flechas del teclado.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+
+// ---- Car model ----
+const CAR_LEN = 92, CAR_WID = 42, WHEELBASE = 58;
+const MAX_SPEED = 150, MAX_REVERSE = 90, ACCEL = 110, FRICTION = 70, MAX_STEER = 0.62, STEER_RATE = 3.2;
+
+let car, target, obstacles, drivable, mode = 'parallel';
+let keys = {up:false,down:false,left:false,right:false};
+let state = 'playing'; // playing | crashed | success | offroad
+
+function setupScene(m){
+  mode = m;
+  state = 'playing';
+  statusEl.className = '';
+  statusEl.textContent = '';
+  if(m === 'parallel'){
+    obstacles = [
+      {x:50,y:280,w:150,h:70},
+      {x:390,y:280,w:150,h:70}
+    ];
+    target = {x:200,y:280,w:190,h:70, angle:0};
+    drivable = {x:20,y:150,w:660,h:230};
+    car = {x:580,y:210,angle:0,speed:0,steer:0};
+  } else {
+    obstacles = [];
+    const spotW=68, spotH=110, gapX=6, startX=36, spotY=30;
+    const openIndex = 4;
+    for(let i=0;i<8;i++){
+      const sx = startX + i*(spotW+gapX);
+      if(i === openIndex){
+        target = {x:sx,y:spotY,w:spotW,h:spotH, angle:-Math.PI/2};
+      } else {
+        obstacles.push({x:sx+4,y:spotY+6,w:spotW-8,h:spotH-10});
+      }
+    }
+    drivable = {x:20,y:20,w:660,h:370};
+    car = {x:600,y:300,angle:Math.PI,speed:0,steer:0};
+  }
+}
+
+document.getElementById('modeParallel').onclick = () => { setActive('modeParallel'); setupScene('parallel'); };
+document.getElementById('modePerp').onclick = () => { setActive('modePerp'); setupScene('perp'); };
+function setActive(id){
+  document.querySelectorAll('.mode').forEach(m=>m.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.getElementById('btnReset').onclick = () => setupScene(mode);
+
+// ---- Input ----
+function bindHold(el, key){
+  const set = v => (e)=>{ e.preventDefault(); keys[key]=v; };
+  el.addEventListener('pointerdown', set(true));
+  el.addEventListener('pointerup', set(false));
+  el.addEventListener('pointerleave', set(false));
+  el.addEventListener('pointercancel', set(false));
+}
+bindHold(document.getElementById('btnUp'),'up');
+bindHold(document.getElementById('btnDown'),'down');
+bindHold(document.getElementById('btnLeft'),'left');
+bindHold(document.getElementById('btnRight'),'right');
+
+window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowUp'||e.key==='w') keys.up=true;
+  if(e.key==='ArrowDown'||e.key==='s') keys.down=true;
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=true;
+});
+window.addEventListener('keyup', e=>{
+  if(e.key==='ArrowUp'||e.key==='w') keys.up=false;
+  if(e.key==='ArrowDown'||e.key==='s') keys.down=false;
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
+});
+
+// ---- Geometry helpers ----
+function carCorners(c){
+  const hl=CAR_LEN/2, hw=CAR_WID/2;
+  const pts=[[hl,hw],[hl,-hw],[-hl,-hw],[-hl,hw]];
+  return pts.map(([lx,ly])=>({
+    x: c.x + lx*Math.cos(c.angle) - ly*Math.sin(c.angle),
+    y: c.y + lx*Math.sin(c.angle) + ly*Math.cos(c.angle)
+  }));
+}
+function rectCorners(r){
+  return [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}];
+}
+function satOverlap(polyA, polyB){
+  const polys=[polyA,polyB];
+  for(const poly of polys){
+    for(let i=0;i<poly.length;i++){
+      const p1=poly[i], p2=poly[(i+1)%poly.length];
+      const nx = -(p2.y-p1.y), ny = p2.x-p1.x;
+      const len = Math.hypot(nx,ny)||1;
+      const ax=nx/len, ay=ny/len;
+      let minA=Infinity,maxA=-Infinity,minB=Infinity,maxB=-Infinity;
+      for(const p of polyA){ const d=p.x*ax+p.y*ay; minA=Math.min(minA,d); maxA=Math.max(maxA,d); }
+      for(const p of polyB){ const d=p.x*ax+p.y*ay; minB=Math.min(minB,d); maxB=Math.max(maxB,d); }
+      if(maxA<minB || maxB<minA) return false;
+    }
+  }
+  return true;
+}
+
+function normAngle(a){
+  a = a % Math.PI;
+  if(a<0) a+=Math.PI;
+  return a;
+}
+
+// ---- Physics ----
+let lastT = null;
+function update(dt){
+  if(state !== 'playing'){ return; }
+
+  const throttle = keys.up ? 1 : (keys.down ? -1 : 0);
+  const steerDir = keys.left ? -1 : (keys.right ? 1 : 0);
+  const targetSteer = steerDir * MAX_STEER;
+  car.steer += (targetSteer - car.steer) * Math.min(1, STEER_RATE*dt);
+
+  if(throttle !== 0){
+    car.speed += throttle*ACCEL*dt;
+  } else {
+    const s = Math.sign(car.speed);
+    car.speed -= s*FRICTION*dt;
+    if(Math.sign(car.speed) !== s) car.speed = 0;
+  }
+  car.speed = Math.max(-MAX_REVERSE, Math.min(MAX_SPEED, car.speed));
+
+  const angularVel = (car.speed/WHEELBASE) * Math.tan(car.steer);
+  car.angle += angularVel*dt;
+  car.x += car.speed*Math.cos(car.angle)*dt;
+  car.y += car.speed*Math.sin(car.angle)*dt;
+
+  const corners = carCorners(car);
+
+  // out of bounds
+  const inBounds = corners.every(p => p.x>=drivable.x && p.x<=drivable.x+drivable.w && p.y>=drivable.y && p.y<=drivable.y+drivable.h);
+  if(!inBounds){
+    state='offroad'; car.speed=0;
+    showStatus('🚧 Te saliste del camino. Reiniciá para intentar de nuevo.','bad');
+    return;
+  }
+
+  // collisions
+  for(const ob of obstacles){
+    if(satOverlap(corners, rectCorners(ob))){
+      state='crashed'; car.speed=0;
+      showStatus('💥 ¡Choque! Reiniciá para intentar de nuevo.','bad');
+      return;
+    }
+  }
+
+  // success check
+  const within = corners.every(p => p.x>=target.x-4 && p.x<=target.x+target.w+4 && p.y>=target.y-4 && p.y<=target.y+target.h+4);
+  const angleOk = Math.abs(normAngle(car.angle)-normAngle(target.angle)) < 0.22 || Math.abs(normAngle(car.angle)-normAngle(target.angle)) > Math.PI-0.22;
+  if(within && angleOk && Math.abs(car.speed) < 6){
+    state='success';
+    showStatus('✅ ¡Bien estacionado!','good');
+  }
+}
+
+function showStatus(msg, cls){
+  statusEl.textContent = msg;
+  statusEl.className = 'show ' + cls;
+}
+
+// ---- Render ----
+function drawCarShape(ctx, c, color){
+  ctx.save();
+  ctx.translate(c.x, c.y);
+  ctx.rotate(c.angle);
+  ctx.fillStyle = color;
+  ctx.strokeStyle = 'rgba(0,0,0,.4)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.roundRect(-CAR_LEN/2,-CAR_WID/2,CAR_LEN,CAR_WID,8);
+  ctx.fill(); ctx.stroke();
+  // windshield (front indicator)
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  ctx.fillRect(CAR_LEN/2-22,-CAR_WID/2+6,14,CAR_WID-12);
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // background
+  ctx.fillStyle='#4b515a';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#3a3f47';
+  ctx.fillRect(drivable.x,drivable.y,drivable.w,drivable.h);
+
+  // lane markings
+  ctx.strokeStyle='rgba(255,255,255,.25)';
+  ctx.setLineDash([14,10]);
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  if(mode==='parallel'){
+    ctx.moveTo(20,210); ctx.lineTo(680,210);
+  } else {
+    ctx.moveTo(20,175); ctx.lineTo(680,175);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // target spot
+  ctx.strokeStyle='#ffd23f';
+  ctx.lineWidth=2.5;
+  ctx.setLineDash([6,6]);
+  ctx.strokeRect(target.x,target.y,target.w,target.h);
+  ctx.setLineDash([]);
+
+  // obstacles
+  obstacles.forEach(ob=>{
+    ctx.fillStyle='#2b2f38';
+    ctx.strokeStyle='#111';
+    ctx.beginPath();
+    ctx.roundRect(ob.x,ob.y,ob.w,ob.h,8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.15)';
+    ctx.fillRect(ob.x+6,ob.y+6,ob.w-12,10);
+  });
+
+  // player car
+  const color = state==='crashed' ? '#ff5d5d' : state==='success' ? '#37c977' : '#3ea6ff';
+  drawCarShape(ctx, car, color);
+}
+
+function loop(t){
+  if(lastT===null) lastT=t;
+  const dt = Math.min(0.033, (t-lastT)/1000);
+  lastT = t;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+setupScene('parallel');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

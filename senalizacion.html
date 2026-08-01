@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Señalización Vial</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --border:#2a2f3a;
+    --text:#eef0f3; --muted:#9aa3b2; --accent:#3ea6ff; --good:#37c977; --bad:#ff5d5d;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:16px;}
+  .wrap{max-width:860px;margin:0 auto;}
+  h1{font-size:21px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab{flex:1;min-width:90px;padding:9px 6px;text-align:center;border-radius:10px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:12.5px;color:var(--muted);}
+  .tab.active{background:var(--accent);color:#04121f;font-weight:700;border-color:var(--accent);}
+  .rule{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted);margin-bottom:16px;}
+  .rule b{color:var(--text);}
+  .subhead{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin:18px 0 8px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
+  .sign{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;font-size:11px;color:var(--muted);}
+  .shape{width:44px;height:44px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .circle{border-radius:50%;background:#fff;border:4px solid #d81e2c;width:100%;height:100%;}
+  .circle-blue{border-radius:50%;background:#2b3a8f;border:4px solid #d81e2c;width:100%;height:100%;}
+  .circle-solid{border-radius:50%;background:#d81e2c;width:100%;height:100%;position:relative;}
+  .circle-solid::after{content:'';position:absolute;top:47%;left:15%;width:70%;height:14%;background:#fff;}
+  .circle-slash{border-radius:50%;background:#2b3a8f;border:4px solid #d81e2c;width:100%;height:100%;position:relative;overflow:hidden;}
+  .circle-slash::after{content:'';position:absolute;top:48%;left:-10%;width:120%;height:12%;background:#d81e2c;transform:rotate(-35deg);}
+  .octagon{width:100%;height:100%;background:#d81e2c;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);display:flex;align-items:center;justify-content:center;}
+  .octagon span{color:#fff;font-size:9px;font-weight:800;}
+  .tri{width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:38px solid #d81e2c;margin:0 auto;position:relative;}
+  .tri::after{content:'';position:absolute;top:-32px;left:-15px;width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:26px solid #fff;}
+  .diamond{width:32px;height:32px;background:#ffd400;border:3px solid #1a1a1a;transform:rotate(45deg);margin:6px auto 12px;}
+  .diamond-o{width:32px;height:32px;background:#ff8c1a;border:3px solid #1a1a1a;transform:rotate(45deg);margin:6px auto 12px;}
+  .rect{width:100%;height:100%;border-radius:5px;}
+  .rect-blue{background:#2b3a8f;}
+  .rect-green{background:#1a8a4a;}
+  .rect-purple{background:#4a2b8f;}
+  .rect-orange{background:#ff8c1a;border-radius:2px;}
+  #quizPane{display:none;}
+  .qcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+  .qtext{font-size:16px;margin-bottom:18px;line-height:1.4;}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .opt{padding:12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);cursor:pointer;font-size:14px;}
+  .opt:hover{border-color:var(--accent);}
+  .opt.correct{background:rgba(55,201,119,.18);border-color:var(--good);color:var(--good);}
+  .opt.wrong{background:rgba(255,93,93,.18);border-color:var(--bad);color:var(--bad);}
+  .opt.disabled{pointer-events:none;}
+  .score{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:14px;color:var(--muted);}
+  .score b{color:var(--text);}
+  .nextBtn{margin-top:16px;background:var(--accent);color:#04121f;border:none;padding:11px 18px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚦 Señalización vial</h1>
+  <div class="sub">Reglamentarias, preventivas, informativas, transitorias y señalamiento horizontal.</div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="tablePane"></div>
+
+  <div id="quizPane">
+    <div class="score">
+      <div>Pregunta <b id="qNum">1</b>/<span id="qTotal">10</span></div>
+      <div>Aciertos: <b id="qScore">0</b></div>
+    </div>
+    <div class="qcard">
+      <div class="qtext" id="qText">Cargando...</div>
+      <div class="opts" id="qOpts"></div>
+      <button class="nextBtn" id="nextBtn">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Data ----
+const categories = {
+  reglamentarias: {
+    title: "📋 Reglamentarias",
+    rule: "<b>Forma y color:</b> circulares, fondo blanco, borde y símbolo rojo o negro. Excepciones: <b>PARE</b> (octógono rojo), <b>CEDA EL PASO</b> (triángulo invertido) y <b>CONTRAMANO</b> (círculo rojo sólido).",
+    groups: {
+      "Prohibición": [
+        {l:"Pare", s:"octagon"}, {l:"Ceda el paso", s:"tri"}, {l:"Contramano", s:"circle-solid"},
+        {l:"No girar en U", s:"circle"}, {l:"Estacionamiento exclusivo (E)", s:"circle-blue"}, {l:"No avanzar", s:"circle"},
+        {l:"Prohibición circular (autos)", s:"circle"}, {l:"Prohibición circular (motos)", s:"circle"},
+        {l:"Prohibición circular (bicicletas)", s:"circle"}, {l:"Prohibición circular (camiones)", s:"circle"},
+        {l:"Prohibición circular (acoplados)", s:"circle"}, {l:"Prohibición circular (peatón)", s:"circle"},
+        {l:"Prohibición circular (carro tracción animal)", s:"circle"}, {l:"Prohibición circular (animales)", s:"circle"},
+        {l:"Prohibición circular (carro mano)", s:"circle"}, {l:"Prohibición circular (tractores)", s:"circle"},
+        {l:"No girar a la izquierda", s:"circle"}, {l:"No girar a la derecha", s:"circle"},
+        {l:"Prohibido adelantar", s:"circle"}, {l:"No ruidos molestos", s:"circle"},
+        {l:"No estacionar", s:"circle"}, {l:"No estacionar ni detenerse", s:"circle"},
+        {l:"Prohibición de cambiar de carril", s:"circle"}
+      ],
+      "Restricción": [
+        {l:"Limitación de peso (4 tn)", s:"circle-blue"}, {l:"Limitación de peso por eje (2 tn)", s:"circle-blue"},
+        {l:"Limitación de altura (4,10 m)", s:"circle-blue"}, {l:"Limitación de ancho (3 m)", s:"circle-blue"},
+        {l:"Límite de velocidad máxima (60)", s:"circle-blue"}, {l:"Límite de velocidad mínima (35)", s:"circle-blue"},
+        {l:"Circulación exclusiva (transporte público)", s:"circle-blue"}, {l:"Circulación exclusiva (motos)", s:"circle-blue"},
+        {l:"Circulación exclusiva (bicicletas)", s:"circle-blue"}, {l:"Circulación exclusiva (jinetes)", s:"circle-blue"},
+        {l:"Circulación exclusiva (peatones)", s:"circle-blue"}, {l:"Uso de cadenas para nieve", s:"circle-blue"},
+        {l:"Giro obligatorio (derecha)", s:"circle-blue"}, {l:"Giro obligatorio (izquierda)", s:"circle-blue"},
+        {l:"Sentido de la circulación (der.)", s:"circle-blue"}, {l:"Sentido de la circulación (izq.)", s:"circle-blue"},
+        {l:"Sentido de circulación (comienzo sentido único)", s:"circle-blue"},
+        {l:"Paso obligatorio (derecha)", s:"circle-blue"}, {l:"Paso obligatorio (izquierda)", s:"circle-blue"},
+        {l:"Tránsito pesado a la derecha", s:"circle-blue"}, {l:"Peatón por la izquierda", s:"circle-blue"},
+        {l:"Puesto de control", s:"circle-blue"}, {l:"Comienzo de doble mano", s:"circle-blue"}
+      ],
+      "Prioridad": [
+        {l:"Pare", s:"octagon"}, {l:"Ceda el paso", s:"tri"},
+        {l:"Preferencia de avance", s:"circle-blue"}, {l:"Barreras ferroviales", s:"circle-blue"}
+      ],
+      "Fin de la prescripción": [
+        {l:"Prohibido sobrepasar - fin de la prescripción", s:"circle-slash"},
+        {l:"Velocidad mínima 35 - fin de la prescripción", s:"circle-slash"}
+      ]
+    }
+  },
+  preventivas: {
+    title: "⚠️ Preventivas",
+    rule: "<b>Forma y color:</b> cuadradas dispuestas en diagonal (rombo), fondo amarillo, borde y símbolo negro. Avisan sobre un peligro presente en la vía.",
+    groups: {
+      "Máximo peligro": [
+        {l:"Cruce ferroviario", s:"diamond"}, {l:"Paneles de prevención (aprox.)", s:"diamond"},
+        {l:"Paneles de prevención (objeto rígido)", s:"diamond"}, {l:"Paneles de prevención (curva/chevron)", s:"diamond"},
+        {l:"Cruz de San Andrés", s:"diamond"}, {l:"Curva cerrada", s:"diamond"},
+        {l:"Cruce de peatones", s:"diamond"}, {l:"Atención", s:"diamond"}
+      ],
+      "Características de la vía": [
+        {l:"Curva (común y pronunciada)", s:"diamond"}, {l:"Curva (contracurva)", s:"diamond"}, {l:"Curva (en S)", s:"diamond"},
+        {l:"Camino sinuoso", s:"diamond"}, {l:"Pendiente descendente", s:"diamond"}, {l:"Pendiente ascendente", s:"diamond"},
+        {l:"Estrechamiento (dos manos)", s:"diamond"}, {l:"Estrechamiento (una mano)", s:"diamond"},
+        {l:"Perfil irregular", s:"diamond"}, {l:"Perfil irregular (badén)", s:"diamond"}, {l:"Perfil irregular (lomada)", s:"diamond"},
+        {l:"Calzada resbaladiza", s:"diamond"}, {l:"Proyección de piedras", s:"diamond"}, {l:"Derrumbes", s:"diamond"},
+        {l:"Túnel", s:"diamond"}, {l:"Puente angosto", s:"diamond"}, {l:"Puente móvil", s:"diamond"},
+        {l:"Altura limitada", s:"diamond"}, {l:"Ancho limitado", s:"diamond"}, {l:"Principio/fin de calzada dividida", s:"diamond"},
+        {l:"Rotonda", s:"diamond"}, {l:"Incorporación de tránsito lateral", s:"diamond"}, {l:"Inicio de doble circulación", s:"diamond"},
+        {l:"Encrucijada (cruce)", s:"diamond"}, {l:"Encrucijada (empalme)", s:"diamond"}, {l:"Encrucijada (bifurcación Y)", s:"diamond"},
+        {l:"Encrucijada (bifurcación T)", s:"diamond"}
+      ],
+      "Riesgo eventual": [
+        {l:"Escolares", s:"diamond"}, {l:"Niños", s:"diamond"}, {l:"Ciclistas", s:"diamond"}, {l:"Jinetes", s:"diamond"},
+        {l:"Animales sueltos (vaca)", s:"diamond"}, {l:"Animales sueltos (ciervo)", s:"diamond"}, {l:"Corredor aéreo", s:"diamond"},
+        {l:"Vehículos extraños (tranvía)", s:"diamond"}, {l:"Vehículos extraños (tractor)", s:"diamond"},
+        {l:"Vehículos extraños (ambulancia)", s:"diamond"}, {l:"Vientos fuertes laterales", s:"diamond"}
+      ],
+      "Anticipo de dispositivos": [
+        {l:"Flecha direccional", s:"diamond"}, {l:"Proximidad de semáforo", s:"diamond"},
+        {l:"Proximidad de señal restrictiva (pare)", s:"diamond"}, {l:"Proximidad de señal restrictiva (paso)", s:"diamond"},
+        {l:"Proximidad de señal restrictiva (otras)", s:"diamond"}
+      ],
+      "Fin de la prevención": [
+        {l:"Calzada resbaladiza - fin de la prevención", s:"diamond"}, {l:"Derrumbes - fin de la prevención", s:"diamond"}
+      ]
+    }
+  },
+  informativas: {
+    title: "ℹ️ Informativas",
+    rule: "<b>Forma y color:</b> rectangulares. Rutas/destinos: fondo verde, símbolo y texto blanco. Servicios y características de la vía: fondo azul, símbolo/texto blanco. Turística y de servicios: fondo violeta.",
+    groups: {
+      "Servicios y destinos": [
+        {l:"Estación de servicio", s:"rect-blue"}, {l:"Aeropuerto", s:"rect-blue"}, {l:"Taxi", s:"rect-blue"},
+        {l:"Destino (ej. Pilar / San Isidro / Morón)", s:"rect-green"}
+      ],
+      "Nomenclatura vial": [
+        {l:"Ruta panamericana", s:"rect-green"}, {l:"Ruta nacional", s:"rect-green"}, {l:"Ruta provincial", s:"rect-green"},
+        {l:"Nomenclatura urbana", s:"rect-purple"}, {l:"Identificación de región/localidad", s:"rect-green"},
+        {l:"Orientación (caminos primarios)", s:"rect-green"}, {l:"Orientación (caminos secundarios)", s:"rect-blue"},
+        {l:"Comienzo/fin de área urbana", s:"rect-green"}, {l:"Identificación de jurisdicción o accidente", s:"rect-green"},
+        {l:"Mojón kilométrico", s:"rect-blue"}, {l:"Nomenclatura de autopista", s:"rect-purple"}
+      ],
+      "Características de la vía": [
+        {l:"Comienzo de autopista", s:"rect-blue"}, {l:"Fin de autopista", s:"rect-blue"},
+        {l:"Indicadora de utilización de carriles", s:"rect-green"}, {l:"Camino/calle sin salida", s:"rect-blue"},
+        {l:"Camino o paso transitable", s:"rect-blue"}, {l:"Velocidades máximas permitidas", s:"rect-blue"},
+        {l:"Esquema de recorrido", s:"rect-green"}, {l:"Desvío por cambio de sentido", s:"rect-blue"},
+        {l:"Estacionamiento (E)", s:"rect-blue"}, {l:"Permitido girar a la derecha", s:"rect-blue"},
+        {l:"Permitido girar a la izquierda", s:"rect-blue"}, {l:"Direcciones permitidas", s:"rect-blue"},
+        {l:"Circulación obligatoria", s:"rect-blue"}, {l:"Carril exclusivo transporte público", s:"rect-blue"}
+      ],
+      "Turística y de servicios": [
+        {l:"Puesto sanitario", s:"rect-purple"}, {l:"Servicio telefónico", s:"rect-purple"}, {l:"Estación de servicio", s:"rect-purple"},
+        {l:"Teleférico", s:"rect-purple"}, {l:"Servicio mecánico", s:"rect-purple"}, {l:"Balneario", s:"rect-purple"},
+        {l:"Lugar para recreación y descanso", s:"rect-purple"}, {l:"Hotel", s:"rect-purple"}, {l:"Bar", s:"rect-purple"},
+        {l:"Campamento", s:"rect-purple"}, {l:"Restaurante", s:"rect-purple"}, {l:"Aeropuerto", s:"rect-purple"},
+        {l:"Gomería", s:"rect-purple"}, {l:"Estacionamiento", s:"rect-purple"}, {l:"Punto panorámico", s:"rect-purple"},
+        {l:"Plaza", s:"rect-purple"}, {l:"Correo", s:"rect-purple"}, {l:"Estacionamiento de casas rodantes", s:"rect-purple"},
+        {l:"Museo", s:"rect-purple"}, {l:"Policía", s:"rect-purple"}, {l:"Zona de detención de transporte público", s:"rect-purple"},
+        {l:"Taxi", s:"rect-purple"}, {l:"Terminal de ómnibus", s:"rect-purple"}, {l:"Estación de ferrocarril", s:"rect-purple"}
+      ]
+    }
+  },
+  transitorias: {
+    title: "🚧 Transitorias",
+    rule: "<b>Forma y color:</b> fondo anaranjado. Indican cambios ocasionales en la vía o presencia de trabajadores/maquinaria.",
+    groups: {
+      "": [
+        {l:"Hombres trabajando", s:"diamond-o"}, {l:"Desvío", s:"rect-orange"}, {l:"Cono", s:"diamond-o"}
+      ]
+    }
+  },
+  horizontal: {
+    title: "🛣️ Horizontal",
+    rule: "Marcas pintadas en el pavimento. <b>Longitudinales:</b> separan sentidos de circulación (amarilla) o carriles (blanca discontinua) o delimitan la calzada (blanca continua). <b>Otras:</b> línea de detención, sendas peatonal y ciclista, líneas auxiliares de reducción de velocidad.",
+    groups: {
+      "Marcas longitudinales": [
+        {l:"Línea de separación de sentidos de circulación", s:"rect-blue"},
+        {l:"Línea de carril (discontinua)", s:"rect-blue"},
+        {l:"Línea de calzada (continua)", s:"rect-blue"}
+      ],
+      "Otras marcas": [
+        {l:"Línea de detención", s:"rect-blue"}, {l:"Senda peatonal", s:"rect-blue"},
+        {l:"Senda para ciclistas", s:"rect-blue"}, {l:"Líneas auxiliares (reducción de velocidad)", s:"rect-blue"}
+      ]
+    }
+  }
+};
+
+function shapeHTML(s){
+  if(s==="octagon") return '<div class="shape"><div class="octagon"><span>PARE</span></div></div>';
+  if(s==="tri") return '<div class="shape"><div class="tri"></div></div>';
+  if(s==="circle-solid") return '<div class="shape"><div class="circle-solid"></div></div>';
+  if(s==="circle-slash") return '<div class="shape"><div class="circle-slash"></div></div>';
+  if(s==="circle-blue") return '<div class="shape"><div class="circle-blue"></div></div>';
+  if(s==="circle") return '<div class="shape"><div class="circle"></div></div>';
+  if(s==="diamond") return '<div class="diamond"></div>';
+  if(s==="diamond-o") return '<div class="diamond-o"></div>';
+  if(s.startsWith("rect")) return `<div class="shape"><div class="rect ${s}"></div></div>`;
+  return '';
+}
+
+const tabsEl = document.getElementById('tabs');
+const tablePane = document.getElementById('tablePane');
+const keys = Object.keys(categories);
+let activeCat = keys[0];
+
+keys.forEach(k=>{
+  const t = document.createElement('div');
+  t.className = 'tab' + (k===activeCat?' active':'');
+  t.textContent = categories[k].title;
+  t.onclick = () => { activeCat = k; renderTable(); switchToTable(); };
+  tabsEl.appendChild(t);
+});
+const quizTab = document.createElement('div');
+quizTab.className = 'tab';
+quizTab.textContent = '🎯 Quiz';
+quizTab.onclick = () => switchToQuiz();
+tabsEl.appendChild(quizTab);
+
+function setActiveTab(el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function renderTable(){
+  const cat = categories[activeCat];
+  let html = `<div class="rule">${cat.rule}</div>`;
+  Object.keys(cat.groups).forEach(g=>{
+    if(g) html += `<div class="subhead">${g}</div>`;
+    html += '<div class="grid">';
+    cat.groups[g].forEach(item=>{
+      html += `<div class="sign">${shapeHTML(item.s)}${item.l}</div>`;
+    });
+    html += '</div>';
+  });
+  tablePane.innerHTML = html;
+}
+
+function switchToTable(){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', i < keys.length && keys[i]===activeCat);
+  });
+  tablePane.style.display='block';
+  document.getElementById('quizPane').style.display='none';
+}
+function switchToQuiz(){
+  setActiveTab(quizTab);
+  tablePane.style.display='none';
+  document.getElementById('quizPane').style.display='block';
+  if(order.length===0) startQuiz();
+}
+
+renderTable();
+
+// ---- Quiz ----
+const questions = [
+  {q:"¿Qué forma y color tienen las señales reglamentarias (regla general)?", a:"Circular, fondo blanco, borde y símbolo rojo/negro", opts:["Circular, fondo blanco, borde y símbolo rojo/negro","Rombo amarillo","Rectángulo verde","Triángulo naranja"]},
+  {q:"¿Qué forma tiene la señal PARE?", a:"Octógono", opts:["Círculo","Triángulo","Octógono","Cuadrado"]},
+  {q:"¿Qué forma tiene la señal CEDA EL PASO?", a:"Triángulo invertido", opts:["Círculo","Triángulo invertido","Rombo","Octógono"]},
+  {q:"¿Cómo es la señal de CONTRAMANO?", a:"Círculo rojo sólido con barra blanca", opts:["Círculo rojo sólido con barra blanca","Rombo amarillo","Triángulo invertido","Rectángulo azul"]},
+  {q:"¿Qué forma y color tienen las señales preventivas?", a:"Rombo (cuadrado en diagonal) amarillo, borde y símbolo negro", opts:["Rombo amarillo, borde y símbolo negro","Círculo rojo","Rectángulo verde","Octógono rojo"]},
+  {q:"¿Qué indican las señales preventivas?", a:"Un peligro presente en la vía", opts:["Un peligro presente en la vía","Lo que está prohibido","Un destino turístico","Un desvío temporal"]},
+  {q:"¿De qué color son las señales de ruta o destino?", a:"Verde con texto blanco", opts:["Azul con texto blanco","Verde con texto blanco","Violeta con texto blanco","Naranja con texto negro"]},
+  {q:"¿De qué color son las señales de servicios (nafta, taxi, etc.)?", a:"Azul", opts:["Azul","Verde","Violeta","Naranja"]},
+  {q:"¿De qué color son las señales de información turística?", a:"Violeta", opts:["Verde","Azul","Violeta","Amarillo"]},
+  {q:"¿De qué color son las señales transitorias?", a:"Anaranjado", opts:["Anaranjado","Amarillo","Rojo","Violeta"]},
+  {q:"¿Qué indican las señales transitorias?", a:"Cambios ocasionales en la vía o presencia de trabajadores/maquinaria", opts:["Cambios ocasionales en la vía o presencia de trabajadores/maquinaria","Límites de velocidad","Rutas turísticas","Prohibiciones permanentes"]},
+  {q:"La señal 'Cruce ferroviario', ¿a qué categoría pertenece?", a:"Preventiva", opts:["Reglamentaria","Preventiva","Informativa","Transitoria"]},
+  {q:"La señal 'No estacionar', ¿a qué categoría pertenece?", a:"Reglamentaria", opts:["Reglamentaria","Preventiva","Informativa","Transitoria"]},
+  {q:"La señal 'Estación de servicio', ¿a qué categoría pertenece?", a:"Informativa", opts:["Reglamentaria","Preventiva","Informativa","Transitoria"]},
+  {q:"La señal 'Hombres trabajando', ¿a qué categoría pertenece?", a:"Transitoria", opts:["Reglamentaria","Preventiva","Informativa","Transitoria"]},
+  {q:"La señal 'Curva cerrada', ¿a qué categoría pertenece?", a:"Preventiva", opts:["Reglamentaria","Preventiva","Informativa","Transitoria"]},
+  {q:"La señal 'Límite de velocidad máxima', ¿a qué categoría pertenece?", a:"Reglamentaria (restricción)", opts:["Reglamentaria (restricción)","Preventiva","Informativa","Transitoria"]},
+  {q:"¿Qué color tiene la línea que separa los dos sentidos de circulación?", a:"Amarilla", opts:["Blanca","Amarilla","Naranja","Roja"]},
+  {q:"¿Qué color tiene la línea que separa carriles del mismo sentido?", a:"Blanca", opts:["Blanca","Amarilla","Naranja","Roja"]},
+  {q:"¿Qué señal indica el fin de la prevención de calzada resbaladiza?", a:"Un rombo amarillo con la misma imagen tachada", opts:["Un rombo amarillo con la misma imagen tachada","Un círculo azul","Un rectángulo verde","Un triángulo invertido"]},
+  {q:"¿Qué categoría de señal es 'Preferencia de avance'?", a:"Reglamentaria (prioridad)", opts:["Reglamentaria (prioridad)","Preventiva","Informativa","Transitoria"]},
+];
+
+let order = [], idx = 0, score = 0, answered = false;
+const qTextEl = document.getElementById('qText');
+const qOptsEl = document.getElementById('qOpts');
+const qNumEl = document.getElementById('qNum');
+const qTotalEl = document.getElementById('qTotal');
+const qScoreEl = document.getElementById('qScore');
+const nextBtn = document.getElementById('nextBtn');
+qTotalEl.textContent = questions.length;
+
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+
+function startQuiz(){
+  order = shuffle([...Array(questions.length).keys()]);
+  idx = 0; score = 0;
+  qScoreEl.textContent = 0;
+  renderQuestion();
+}
+function renderQuestion(){
+  answered = false;
+  nextBtn.style.display = 'none';
+  const item = questions[order[idx]];
+  qNumEl.textContent = idx+1;
+  qTextEl.textContent = item.q;
+  qOptsEl.innerHTML = '';
+  shuffle(item.opts).forEach(opt=>{
+    const d = document.createElement('div');
+    d.className = 'opt';
+    d.textContent = opt;
+    d.onclick = () => selectAnswer(d, opt, item.a);
+    qOptsEl.appendChild(d);
+  });
+}
+function selectAnswer(el, chosen, correct){
+  if(answered) return;
+  answered = true;
+  document.querySelectorAll('.opt').forEach(o=>o.classList.add('disabled'));
+  if(chosen === correct){ el.classList.add('correct'); score++; }
+  else {
+    el.classList.add('wrong');
+    document.querySelectorAll('.opt').forEach(o=>{ if(o.textContent===correct) o.classList.add('correct'); });
+  }
+  qScoreEl.textContent = score;
+  nextBtn.style.display = 'inline-block';
+}
+nextBtn.onclick = () => {
+  idx++;
+  if(idx >= order.length){
+    qTextEl.textContent = `¡Terminaste! Resultado: ${score}/${questions.length}`;
+    qOptsEl.innerHTML = '';
+    nextBtn.textContent = 'Volver a empezar';
+    nextBtn.onclick = startQuiz;
+  } else renderQuestion();
+};
+</script>
+</body>
+</html>
