@@ -18,5 +18,5 @@ No requiere instalación, conexión a internet ni dependencias externas: todo fu
 
 Créditos
 
-Contenido basado en el material del Curso Nacional Vial. Desarrollado con Claude como asistente de programación.
+Contenido basado en mis conocimientos para rendir el examen de Licencia de Conducir. Desarrollado con Claude como asistente de programación.
 Esta información es para testear claude como herramienta de desarrollo, de ninguna manera debe utilizarse como fuente de estudio para rendir el curso de licencia nacional.
